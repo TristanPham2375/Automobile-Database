@@ -66,8 +66,5 @@ The schema has been normalized up to the **4th Normal Form (4NF)** to ensure:
 This normalization approach helps in maintaining data integrity, ensuring consistency across the database, and improving query performance.
 
 
-```sql
-CREATE DATABASE Automobile_DB;
-
 
 
