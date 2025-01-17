@@ -65,6 +65,11 @@ The schema has been normalized up to the **4th Normal Form (4NF)** to ensure:
 
 This normalization approach helps in maintaining data integrity, ensuring consistency across the database, and improving query performance.
 
+## UML Diagram
+
+![image](https://github.com/user-attachments/assets/327898ed-bbcf-4300-9060-6edf911a8efb)
+
+
 
 
 
