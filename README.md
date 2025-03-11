@@ -1,6 +1,6 @@
 # Automobile Database 
 
-This SQL project defines a relational database schema for storing and managing data about automobile models, their engines, and manufacturers. The design aims to facilitate efficient querying and analysis of automobile-related information such as car model specifications, engine configurations, and manufacturer details. The database has been normalized up to the 4th Normal Form (4NF) to ensure data integrity and minimize redundancy.
+This SQL project defines a relational database schema for storing and managing data about automobile models, their engines, and manufacturers in MySQL. The design aims to facilitate efficient querying and analysis of automobile-related information such as car model specifications, engine configurations, and manufacturer details. The database has been normalized up to the 4th Normal Form (4NF) to ensure data integrity and minimize redundancy.
 
 ## Database Structure
 
