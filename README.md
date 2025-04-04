@@ -4,7 +4,7 @@ This SQL project defines a relational database schema for storing and managing d
 
 ## Database Structure
 
-The schema includes several interrelated tables, each representing key entities in the automobile industry:
+The schema includes several interrelated tables, each representing key entities in the automobile industry: 
 
 ### 🏭 `Manufacturer` Table
 Stores detailed information about car and engine manufacturers. Attributes include the name, origin, founding date, founder, headquarters, and company type.
