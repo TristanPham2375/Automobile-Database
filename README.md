@@ -1,74 +1,140 @@
-# Automobile Database 
+# 🚗 Automobile Marketplace Database (MySQL 8)
 
-This SQL project defines a relational database schema for storing and managing data about automobile models, their engines, and manufacturers in MySQL. The design aims to facilitate efficient querying and analysis of automobile-related information such as car model specifications, engine configurations, and manufacturer details. The database has been normalized up to the 4th Normal Form (4NF) to ensure data integrity and minimize redundancy.
+A normalized relational database for an **Autotrader-style vehicle marketplace**, built in **MySQL 8+** using InnoDB, foreign keys, constraints, triggers, scheduled events, views, and JSON-based filters.
 
-## Database Structure
+This project models both:
+- A **vehicle catalog layer** (manufacturers, models, engines, classes), and  
+- A **marketplace layer** (vehicles by VIN, listings, sellers, buyers, messaging, watchlists, analytics).
 
-The schema includes several interrelated tables, each representing key entities in the automobile industry: 
+It demonstrates **database design, data integrity, and automation** in a production-style schema.
 
-### 🏭 `Manufacturer` Table
-Stores detailed information about car and engine manufacturers. Attributes include the name, origin, founding date, founder, headquarters, and company type.
+---
 
-### 🚙 `Class` Table
-Represents car model classifications (e.g., sedan, SUV, etc.). Each model is associated with a classification to define its category.
+## 📌 Key Features
 
-### 🔧 `Engine` Table
-Contains engine specifications, such as fuel type, power, configuration, cylinder count, and displacement. Each engine is linked to a manufacturer.
+### 1️⃣ Catalog Layer (4NF Normalized)
+A clean, extensible product catalog for vehicles.
 
-### 🚘 `Model` Table
-Stores detailed information about specific car models, including the model name, release date, manufacturer, classification, drivetrain, transmission type, seats, fuel efficiency, price, and reliability score.
+**Core Entities**
+- `Manufacturer` (with parent companies, company type)
+- `Model` (class, drivetrain, mileage, reliability, price)
+- `Engine` (fuel type, power, displacement)
+- `Class`, `FuelType`, `CompanyType` lookup tables
 
-### 🏎️ `Speed` Table
-Contains the maximum speed for each car model.
+**Normalization**
+- Multi-valued attributes decomposed into:
+  - `ManufacturerBrand`
+  - `ManufacturerFounder`
+- Many-to-many:
+  - `ModelEngine`
+- 1:1 extensions:
+  - `Speed`
+  - `Acceleration`
 
-### ⚡ `Acceleration` Table
-Stores acceleration data for each model, including 0-60 mph and quarter-mile times.
+**Catalog Views**
+- `vModelManufacturerClass` → model + manufacturer + class  
+- `vModelEngine` → model + engine + fuel type  
 
-### 🔗 `ModelEngine` Table
-A junction table linking car models to their respective engines, allowing a many-to-many relationship between models and engines.
+---
 
-## Views
+### 2️⃣ Marketplace Layer (Autotrader-style)
 
-### 👀 `vModelManufacturerClass` View
-A view that combines data from the `Model`, `Manufacturer`, and `Class` tables to provide a comprehensive view of car models, their manufacturers, and classifications.
+#### 🔹 Sellers & Buyers
+- `Seller` (polymorphic)
+  - `Dealer`
+  - `PrivateSeller`
+- `AppUser` (buyers)
 
-### ⚙️ `vModelEngine` View
-A view that combines data from the `Model`, `Engine`, and `ModelEngine` tables, offering detailed information about car models and their associated engines.
+#### 🔹 Vehicles & Listings
+- `Vehicle` (VIN-based, ties marketplace to catalog `Model`)
+- `Listing` (price, status, expiry, sold date)
+- `ListingPhoto`
+- `ListingPriceHistory`
 
-## Functions, Procedures, and Triggers
+#### 🔹 Buyer Features
+- `Watchlist` (favorites)
+- `SavedSearch` (JSON-based filters)
+- `MessageThread` + `Message` (buyer–seller messaging)
 
-### 📊 `avgPriceByClass` Function
-Calculates and returns the average price of car models by class.
+#### 🔹 Location
+- `Location` with region indexes for search
 
-### 📝 `InsertManufacturer` Procedure
-A stored procedure for inserting new manufacturers into the `Manufacturer` table.
+---
 
-### ⚠️ `validate_EnginePower` Trigger
-Validates that engine power is not negative before a new engine record is inserted.
+## ⚙️ Data Integrity & Business Rules
 
-### 🗓️ `ArchiveOldModels` Event
-An event that runs annually to delete car models older than 20 years from the `Model` table.
+Implemented using **constraints, triggers, and foreign keys**:
 
-## Indexes
-To optimize query performance, the following indexes have been created:
-- 🔍 `idx_manufacturer_name`: Index on `ManufacturerName`.
-- 🔍 `idx_model_name`: Index on `ModelName`.
-- 🔍 `idx_engine_fueltype`: Index on `EngineFuelType`.
-- 🔍 `idx_class_desc`: Index on `ClassDesc`.
+### ✅ Validation
+- Prevent negative prices, mileage, power, displacement
+- VIN must be 17 characters
+- Vehicle year range enforced via triggers
+- Seat, mileage, engine, and price sanity checks
 
-## Normalization
+### 🔒 Marketplace Rules
+- **One ACTIVE listing per VIN** (trigger)
+- **Price history automatically tracked** on update
+- **SoldAt timestamp auto-set** when status becomes `SOLD`
 
-The schema has been normalized up to the **4th Normal Form (4NF)** to ensure:
-- Elimination of redundant data.
-- Avoidance of partial and transitive dependencies.
-- Minimization of multi-valued dependencies.
+---
 
-This normalization approach helps in maintaining data integrity, ensuring consistency across the database, and improving query performance.
+## ⏱️ Automation with Events
 
-## UML Diagram
+Scheduled background jobs simulate real marketplace behavior:
 
-![image](https://github.com/user-attachments/assets/327898ed-bbcf-4300-9060-6edf911a8efb)
+| Event | Purpose |
+|------|--------|
+| `ExpireListingsNightly` | Expires listings past `ExpiresAt` |
+| `CleanupOldDraftListingsWeekly` | Deletes stale drafts/pending listings |
+| `CaptureMarketSnapshotDaily` | Stores market KPIs (active count, avg, median price, mileage) |
+| `NotifyPriceDropsDaily` | Creates notifications for watchlisted price drops |
 
+---
+
+## 📊 Analytics & Views
+
+### 🔍 Search View
+`vListingSearch` powers browsing like a real marketplace:
+- Filters by price, mileage, class, location, condition, seller type
+
+### 📈 Functions
+- `avgPriceByClass(classId)` → average model price by class (catalog)
+- `avgActiveListingPriceByClass(classId)` → marketplace analytics
+
+### 📸 Market Snapshots
+`MarketSnapshot` stores daily:
+- Active listings
+- Average price
+- Approximate median price
+- Average mileage
+
+---
+
+## 🧠 Design Highlights
+
+- **Normalized to 4NF** to remove multi-valued dependencies
+- **VIN-based Vehicle layer** separates real inventory from abstract models
+- **Polymorphic seller design** (`Dealer` vs `PrivateSeller`)
+- **JSON filters** for flexible saved searches (like modern apps)
+- **Triggers + Events** simulate real business workflows
+- **Indexes** on search-critical fields (price, status, city, mileage, model, year)
+
+---
+
+## 🛠️ Technologies
+
+- **MySQL 8.0+**
+- InnoDB
+- Foreign keys, CHECK constraints
+- Triggers & stored functions
+- Scheduled events (jobs)
+- JSON columns for flexible search filters
+
+---
+
+## 📂 ER (UML) Diagram
+
+<img width="2086" height="1246" alt="Untitled" src="https://github.com/user-attachments/assets/fdc5a804-0ca4-4542-b1cc-a1f398e6d569" />
 
 
 
